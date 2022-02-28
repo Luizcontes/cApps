@@ -153,13 +153,15 @@ void buscarRegistro(int data,No *cabeca) {
 void liberarMemoria(No *cabeca){
 
     No *tmp;
-    while(cabeca!=NULL) {
+    while(cabeca->proximo!=cabeca) {
         tmp=cabeca;
         cabeca=cabeca->proximo;    
         tmp->proximo->anterior=tmp->anterior;
         tmp->anterior->proximo=tmp->proximo;
         free(tmp);
     }
+
+    free(cabeca);
     
     printf("Memoria liberada...");
 }
