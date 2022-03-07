@@ -23,9 +23,7 @@ void inserirNo(No* cabeca, No* no) {
 
     No* y = NULL;
 
-    if (cabeca == NULL)
-        y = cabeca;
-    else if (cabeca->proximo == NULL)
+    if (cabeca->proximo == NULL)
         cabeca->proximo = no;
     else {
         y = cabeca;
@@ -54,6 +52,8 @@ void deletarLista(No *cabeca) {
         free(y->nome);
         free(y);        
     }
+    free(cabeca->nome);
+    free(cabeca);
 }
 
 int main() {
