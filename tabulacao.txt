@@ -1,0 +1,4 @@
+Nome;Idade;Sexo;Tel
+Luiz;33;M;999666777
+Cat;25;F;123555777
+Ivi;45;F;444666555
