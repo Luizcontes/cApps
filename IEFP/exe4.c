@@ -7,6 +7,7 @@ typedef union {
     char* nome;
     long tel;
 } coluna;
+
 typedef struct cadastro {
     int count;
     char* nome;
@@ -37,7 +38,7 @@ void inserir(cadastro* head, cadastro* n) {
 
 void imprimirLista(cadastro* head) {
 
-    cadastro* tmp;
+    cadastro* tmp = NULL;
 
     tmp = head;
 
@@ -79,7 +80,7 @@ void escreverArquivo(cadastro* head) {
 
 int liberarMemoria(cadastro* head) {
 
-    cadastro* tmp;
+    cadastro* tmp = NULL;
     if (head == NULL)
         return 0;
     tmp = head;

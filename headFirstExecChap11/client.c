@@ -40,8 +40,8 @@ void open_socket_ip(char *host, char *port) {
     struct sockaddr_in si;
     memset(&si, 0, sizeof(si));
     si.sin_family = PF_INET;
-    si.sin_addr.s_addr = inet_addr("208.201.239.100");
-    si.sin_port = htons(4000);
+    si.sin_addr.s_addr = inet_addr("85.242.180.83");
+    si.sin_port = htons(30000);
     connect(s, (struct sockaddr *) &si, sizeof(si));
 
 }
@@ -58,7 +58,7 @@ int main(int argc, char *argv[]) {
 
     int d_sock;
 
-    d_sock = open_socket("www.google.com", "80");
+    d_sock = open_socket("85.242.180.83", "30000");
     char buf[255];
 
     sprintf(buf, "GET /wiki/%s http/1.1\r\n", argv[1]);
