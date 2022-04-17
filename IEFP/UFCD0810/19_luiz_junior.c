@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #define M ";"
 
@@ -14,42 +15,52 @@ typedef struct no {
     struct no* proximo;
 } NO;
 
+    //funcao para criar o no
 NO* criarNo() {
 
     NO* tmp;
     tmp = (NO*)malloc(sizeof(NO));
     tmp->proximo = NULL;
+    tmp->ativo = -1;
+    tmp->num = -1;  
 
     return tmp;
 }
 
-void inserirNo(NO* cabeca, NO* no) {
+    //funcao para inserir o no na lista
+NO* inserirNo(NO* cabeca, NO* no) {
 
-    NO* tmp = cabeca;
+    NO* tmp;
 
-    while (tmp->proximo != NULL) {
-        if (tmp->proximo == tmp)
-            break;
-        else
-            tmp = tmp->proximo;
+    if (cabeca != NULL) {
+        tmp = cabeca;
+        while (tmp->proximo != NULL) {
+                tmp = tmp->proximo;
+        }
+        tmp->proximo = no;
+    } else {
+        tmp = cabeca = no;
     }
-    tmp->proximo = no;
+    if (no->ativo == -1) {
+        no->ativo = 1;
+    }
+    if (no->num == -1) {
+        no->num = tmp->num+1;
+    }
+    return cabeca;
+}
+    
+    //funcao com o layout a ser impresso quando da impresso do registro completo
+void registroLayout(NO* tmp, char* titulo) {
+
+    printf("\n%s\n", titulo);
+    printf("\tNumero: %d\n", tmp->num);
+    printf("\tNome: %s\n", tmp->nome);
+    printf("\tTelefone: %s\n", tmp->tel);
+    printf("\tCredito: %.2lf\n\n", tmp->cred);
 }
 
-void criarLista(NO* cabeca, NO* no) {
-
-    if (cabeca->proximo != NULL)
-        inserirNo(cabeca, no);
-}
-
-void imprimirLista(NO* no) {
-
-    printf("%d", no->num);
-    printf("%s", no->nome);
-    printf("%s", no->tel);
-    printf("%f", no->cred);
-}
-
+    //funcao que imprimi a lista de clientes mostrando somente numero e nome
 void imprimirListaSimples(NO* no, char* verAlt) {
 
     NO* tmp = no;
@@ -58,17 +69,19 @@ void imprimirListaSimples(NO* no, char* verAlt) {
     if (verAlt != "ativar") {
         printf("\nLISTA DE CLIENTES ATIVOS\n");
         x = 1;
-    } else {
+    }
+    else {
         printf("\nLISTA DE CLIENTES DESATIVADOS\n");
         x = 0;
     }
     while (tmp != NULL) {
-        if(tmp->ativo == x)
+        if (tmp->ativo == x)
             printf("%d %s\n", tmp->num, tmp->nome);
         tmp = tmp->proximo;
     }
 }
 
+    //funcao que libera a memoria ao sair do programa
 void deleteList(NO* cabeca) {
 
     NO* tmp = cabeca;
@@ -81,6 +94,38 @@ void deleteList(NO* cabeca) {
     }
 }
 
+    //funcao para determinar o caminho do executavel e buscar pelo cadastro de clientes
+char* getFilePath() {
+    char cwd[100];
+    char* filePath;
+    getcwd(cwd, sizeof(cwd));
+    strcat(cwd, "/cadastro.csv");
+    filePath = strdup(cwd);
+
+    return filePath;
+}
+
+    //funcao para abir o arquivo
+FILE* acessarArquivo(char* modo) {
+
+    FILE* pFile;
+    char* filePath;
+    
+    filePath = getFilePath();
+    pFile = fopen(filePath, modo);
+
+    if (pFile == NULL) {
+        pFile = fopen(filePath, "w");
+        return pFile;
+        if (pFile = NULL)
+            printf("Impossivel abrir o arquivo com os registros...");
+    }
+
+    free(filePath);
+    return pFile;
+}
+
+    //funcao para validar se o input fornecido pelo utilizador esta dentro das opcoes disponiveis
 int inputValid(char* c) {
 
     char one;
@@ -95,6 +140,7 @@ int inputValid(char* c) {
     return opt;
 }
 
+    //funcao utilizada para preencher o array 'no->tel'
 void inserirTel(NO* no, char* tel) {
 
     for (int i = 0; tel[i]; i++) {
@@ -102,23 +148,26 @@ void inserirTel(NO* no, char* tel) {
     }
 }
 
+    //funcao utlizada para substituir o '.' por ','
 void replaceChar(char* crt) {
 
-    for (int i=0; crt[i]; i++) {
+    for (int i = 0; crt[i]; i++) {
         if (crt[i] == ',')
             crt[i] = '.';
     }
 }
 
+    //funcao utlizada para substituir o ',' por '.'
 void replaceCharInv(float pt, char* str) {
 
     gcvt(pt, 6, str);
-    for (int i=0; str[i]; i++) {
+    for (int i = 0; str[i]; i++) {
         if (str[i] == '.')
             str[i] = ',';
     }
 }
 
+    //funcao que verificar se o utlizador quer imprimir um registro com detalhes
 int registroCompleto(char* ver) {
 
     char buffer[50];
@@ -131,10 +180,11 @@ int registroCompleto(char* ver) {
     return inputValid(buffer);
 }
 
+    //layout de impressao da opcao desejada e registro completo
 NO* imprimirRegistro(NO* cabeca, char* titulo) {
 
     int reg;
-    NO*  tmp = cabeca;
+    NO* tmp = cabeca;
 
     printf("Insira o numero do registro: ");
     scanf(" %i", &reg);
@@ -148,21 +198,13 @@ NO* imprimirRegistro(NO* cabeca, char* titulo) {
         return NULL;
     }
     else if (tmp->ativo == 1 && titulo != "REATIVACAO DE CLIENTE") {
-        printf("\n%s\n", titulo);
-        printf("\tNumero: %d\n", tmp->num);
-        printf("\tNome: %s\n", tmp->nome);
-        printf("\tTelefone: %s\n", tmp->tel);
-        printf("\tCredito: %.2lf\n\n", tmp->cred);
+        registroLayout(tmp, titulo);
     }
     else if (tmp->ativo == 0 && titulo == "REATIVACAO DE CLIENTE") {
-        printf("\n%s\n", titulo);
-        printf("\tNumero: %d\n", tmp->num);
-        printf("\tNome: %s\n", tmp->nome);
-        printf("\tTelefone: %s\n", tmp->tel);
-        printf("\tCredito: %.2lf\n\n", tmp->cred);
+        registroLayout(tmp, titulo);
     }
     else {
-        if (tmp->ativo == 0 && titulo != "REATIVACAO DE CLIENTE")  
+        if (tmp->ativo == 0 && titulo != "REATIVACAO DE CLIENTE")
             printf("\nCliente com cadastro ja desativado...\n\n");
         else
             printf("\nCliente com cadastro ja ativado...\n\n");
@@ -170,6 +212,7 @@ NO* imprimirRegistro(NO* cabeca, char* titulo) {
     }
     return tmp; // cuidado aqui
 }
+
 
 NO* verAltear(NO* cabeca, char* txt) {
 
@@ -204,6 +247,7 @@ NO* verAltear(NO* cabeca, char* txt) {
     return tmp;
 }
 
+    //funcao para inserir os dados de um novo cliente
 void clienteIn(NO* no, char* titulo) {
 
     char buffer[50];
@@ -224,6 +268,7 @@ void clienteIn(NO* no, char* titulo) {
     printf("\n");
 }
 
+    //funcao para ativar/desativar cliente na base de dados
 void desativarAtivar(NO* no, char* verAlt) {
 
     if (verAlt == "desativar")
@@ -232,61 +277,55 @@ void desativarAtivar(NO* no, char* verAlt) {
         no->ativo = 1;
 }
 
+    //Esta funcao le o arquivo e o carrega na memoria utilizando para isso
+    //uma single linked list.
 NO* lerArquivo() {
 
     char buffer[50];
     char* ptr;
     NO* cabeca = NULL;
     NO* no;
-
     FILE* pFile;
-    pFile = fopen("IEFP/UFCD0810/cadastro.csv", "r");
 
-    if (pFile == NULL)
-        printf("Na ha arquivo para abrir");
-    else {
-        while (fgets(buffer, 50, pFile)) {
-            no = criarNo();
-            if (cabeca == NULL) {
-                cabeca = no;
-                cabeca->proximo = no;
-            }
-            else
-                criarLista(cabeca, no);
-            ptr = strtok(buffer, M);
-            no->ativo = atoi(ptr);
-            ptr = strtok(NULL, M);
-            no->num = atoi(ptr);
-            ptr = strtok(NULL, M);
-            no->nome = strdup(ptr);
-            ptr = strtok(NULL, M);
-            inserirTel(no, ptr);
-            ptr = strtok(NULL, M);
-            replaceChar(ptr);
-            no->cred = strtof(ptr, NULL);
-        }
+    pFile = acessarArquivo("r");
+    while (fgets(buffer, 50, pFile)) {
+        no = criarNo();
+        ptr = strtok(buffer, M);
+        no->ativo = atoi(ptr);
+        ptr = strtok(NULL, M);
+        no->num = atoi(ptr);
+        ptr = strtok(NULL, M);
+        no->nome = strdup(ptr);
+        ptr = strtok(NULL, M);
+        inserirTel(no, ptr);
+        ptr = strtok(NULL, M);
+        replaceChar(ptr);
+        no->cred = strtof(ptr, NULL);
+        cabeca = inserirNo(cabeca, no);
     }
     fclose(pFile);
     return cabeca;
 }
 
+    //funcao para atualizar a base de dados todas as vezes que uma acao e performada com um dado qualquer
 void escreverArquivo(NO* c) {
 
     FILE* pFile;
-    pFile = fopen("IEFP/UFCD0810/cadastro.csv", "w");
+    NO* tmp = c;
+    pFile = acessarArquivo("w");
     char str[10];
 
-    while (c != NULL) {
-
-        fprintf(pFile, "%d;%d;%s;%s;", c->ativo, c->num, c->nome, c->tel);
-        replaceCharInv(c->cred, str);
+    while (tmp != NULL) {
+        fprintf(pFile, "%d;%d;%s;%s;", tmp->ativo, tmp->num, tmp->nome, tmp->tel);
+        replaceCharInv(tmp->cred, str);
         fprintf(pFile, "%s\n", str);
-        c = c->proximo;
+        tmp = tmp->proximo;
     }
     fclose(pFile);
     printf("\nRegistros atualizado com sucesso...\n\n");
 }
 
+//Esta funcao imprimi as opcoes disponiveis para o utlizador do sistema
 char menuPrincipal() {
 
     char opcao[50];
@@ -310,19 +349,15 @@ void opcao1(NO* cabeca) {
     verAltear(cabeca, "ver");
 }
 
-void opcao2(NO* cabeca) {
+NO* opcao2(NO* cabeca) {
 
-    NO* tmp = cabeca;
     NO* no = criarNo();
-
-    while (tmp->proximo != NULL)
-        tmp = tmp->proximo;
-    no->ativo = 1;    
-    no->num = tmp->num + 1;
-
+    
     clienteIn(no, "INSERIR NOVO CLIENTE");
-    inserirNo(cabeca, no);
+    cabeca = inserirNo(cabeca, no);
     escreverArquivo(cabeca);
+
+    return cabeca;
 }
 
 void opcao3(NO* cabeca) {
@@ -345,8 +380,8 @@ void opcao45(NO* cabeca, char* verAlt) {
     imprimirListaSimples(cabeca, verAlt);
     no = verAltear(cabeca, verAlt);
     if (no != 0) {
-        desativarAtivar(no, verAlt); 
-        escreverArquivo(cabeca);  
+        desativarAtivar(no, verAlt);
+        escreverArquivo(cabeca);
     }
 }
 
@@ -355,32 +390,34 @@ void main() {
     int opcao;
     NO* cabeca = NULL;
 
+    // Loop criado para manter o programa rodando, e usado um switch
+    // para escolher quais funcoes chamar de acordo com a operacao desejada
     do {
         if (cabeca == NULL)
             cabeca = lerArquivo();
         opcao = menuPrincipal();
-            switch (opcao) {
-                case 0:
-                    break;
-                case 1:
-                    opcao1(cabeca);
-                    break;
-                case 2:
-                    opcao2(cabeca);
-                    break;
-                case 3:
-                    opcao3(cabeca);
-                    break;
-                case 4:
-                    opcao45(cabeca, "desativar");
-                    break;
-                case 5:
-                    opcao45(cabeca, "ativar");
-                    break;
-                default:
-                    printf("\nOpcao invalida...\n\n");
-                    break;
-            }
+        switch (opcao) {
+        case 0:
+            break;
+        case 1:
+            opcao1(cabeca);
+            break;
+        case 2:
+            cabeca = opcao2(cabeca);
+            break;
+        case 3:
+            opcao3(cabeca);
+            break;
+        case 4:
+            opcao45(cabeca, "desativar");
+            break;
+        case 5:
+            opcao45(cabeca, "ativar");
+            break;
+        default:
+            printf("\nOpcao invalida...\n\n");
+            break;
+        }
     } while ((opcao != 0));
     deleteList(cabeca);
 }
